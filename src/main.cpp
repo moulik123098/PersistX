@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include<limits>
+#include<cstdlib>
 
 #include "PageManager.h"
 #include "QueryEngine.h"
@@ -9,7 +10,6 @@
 void Menu()
 {
 
-    std::cout << "\n";
     std::cout << "  +===========================================+\n";
     std::cout << "  |         P A G E  D B  E N G I N E         |\n";
     std::cout << "  +===========================================+\n";
@@ -33,7 +33,8 @@ void Menu()
     std::cout << "  |   10.  Buffer pool stats                  |\n";
     std::cout << "  |   11.  Flush to disk                      |\n";
     std::cout << "  |                                           |\n";
-    std::cout << "  |   12.  Exit                               |\n";
+    std::cout << "  |   12.  Crash  (simulate abrupt exit)      |\n";
+    std::cout << "  |   13.  Exit                               |\n";
     std::cout << "  |                                           |\n";
     std::cout << "  +===========================================+\n";
     std::cout << "\n  Choice: ";
@@ -43,9 +44,17 @@ int main()
 {
 
     PageManager pm;
+
+
+    // for(int i = 0 ; i < 150 ; i++){
+    //     pm.insert(std::to_string(i+1),std::to_string(i+2));
+    // } test
+
     QueryEngine qe(pm.getBuffer(), pm.getPageIds());
 
-    pm.setQueryEngine(&qe);
+    pm.setQueryEngine(&qe);  
+
+    
 
     short choice;
 
@@ -137,6 +146,15 @@ int main()
             break;
 
         case 12:
+            std::cerr << "\n[CRASH] Simulating abrupt engine failure!\n"
+                      << "[CRASH] Buffer NOT flushed. WAL NOT checkpointed.\n"
+                      << "[CRASH] On next startup, WAL redo will replay all\n"
+                      << "[CRASH] operations logged since the last checkpoint.\n"
+                      << "\nFatal error: unhandled exception — process terminated.\n"
+                      << "Exit code: 1\n";
+            std::exit(1); 
+
+        case 13:
             pm.flushAll();  
             std::cout << "Exiting...\n";
             return 0;

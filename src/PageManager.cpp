@@ -5,7 +5,7 @@
 PageManager::PageManager() : nextPageId(0), disk("data"), buffer(disk), wal("data"), qe(nullptr) {
     auto pages = disk.readAllPages();
 
-    if(wal.hasPendingEntries()) recoverFromWAL(pages);
+    if (wal.hasPendingEntries()) recoverFromWAL(pages);
 
     if (pages.empty()) {
         std::cout << "[PAGE MANAGER] No existing data found. Starting fresh.\n";
@@ -21,10 +21,9 @@ PageManager::PageManager() : nextPageId(0), disk("data"), buffer(disk), wal("dat
 }
 
 void PageManager::recoverFromWAL(std::vector<Page>& pages) {
-
-    auto entries = wal.readAll();
+    auto entries = wal.readPending();
     std::cout << "[WAL] Found " << entries.size()
-              << " unfinished operation(s). Recovering...\n";
+              << " unfinished operation(s) since last checkpoint. Redoing...\n";
  
     for (auto& entry : entries) {
         if (entry.op == WALOp::INSERT) {
@@ -46,7 +45,7 @@ void PageManager::recoverFromWAL(std::vector<Page>& pages) {
                     }
                 }
             }
-            std::cout << "[WAL] Recovered INSERT key=\"" << entry.key << "\"\n";
+            std::cout << "[WAL REDO] INSERT key=\"" << entry.key << "\"\n";
         }
         else if (entry.op == WALOp::REMOVE) {
             for (auto& page : pages) {
@@ -55,13 +54,14 @@ void PageManager::recoverFromWAL(std::vector<Page>& pages) {
                     break;
                 }
             }
-            std::cout << "[WAL] Recovered REMOVE key=\"" << entry.key << "\"\n";
+            std::cout << "[WAL REDO] REMOVE key=\"" << entry.key << "\"\n";
         }
     }
+
     for (auto& page : pages)
         disk.writePage(page);
-    wal.clear();
-    std::cout << "[WAL] Recovery complete.\n";
+    wal.writeCheckpoint();
+    std::cout << "[WAL] Redo complete. State restored from crash.\n";
 }
 
 Page& PageManager::allocatePage() {
@@ -138,5 +138,5 @@ size_t PageManager::recordCount() {
 
 void PageManager::flushAll() {
     buffer.flushAll();
-    wal.clear();  
+    wal.writeCheckpoint();
 }
