@@ -171,7 +171,7 @@ Next startup:
 | Name | Repository |
 |------|------------|
 | Ekansh Goel | https://github.com/ekansh1905/PersistX.git |
-| Moulik Bansal | https://github.com/moulik123098/PersistX-moulik.git |
+| Moulik Bansal | https://github.com/moulik123098/PersistX.git |
 | Krivit Sisodiya | https://github.com/krix-s/PersistX.git |
 
 ---
