@@ -8,31 +8,36 @@ PersistX demonstrates how real-world databases (PostgreSQL, SQLite, RocksDB) man
 
 ## Architecture
 
-\```
+```
 Client (TUI Menu)
-       ↓
-  QueryEngine          ← sorted in-memory index (std::map)
-       ↓
-  PageManager          ← orchestrates all storage operations
-     ↙       ↘
+        |
+        v
+  QueryEngine          <- sorted in-memory index (std::map)
+        |
+        v
+  PageManager          <- orchestrates all storage operations
+      /       \
+     v         v
 BufferPool   WALManager
-     ↓             ↓
+     |             |
+     v             v
 DiskManager   wal.log
-     ↓
+     |
+     v
 data/page_N.txt
-\```
+```
 
 Each layer has a single responsibility and a well-defined interface:
 
-| Layer            | Responsibility                                         |
-|------------------|--------------------------------------------------------|
-| **Record**       | Basic key-value unit of storage                        |
-| **Page**         | Slotted page layout (4 KB, up to 64 records per page)  |
-| **DiskManager**  | Reads and writes individual page files from disk       |
-| **BufferPool**   | In-memory page cache with LRU eviction (min-heap)      |
-| **WALManager**   | Write-ahead logging for crash durability               |
-| **PageManager**  | Coordinates inserts, deletes, WAL recovery on startup  |
-| **QueryEngine**  | Sorted index supporting get, prefix filter, range scan |
+| Layer           | Responsibility                                         |
+|-----------------|--------------------------------------------------------|
+| **Record**      | Basic key-value unit of storage                        |
+| **Page**        | Slotted page layout (4 KB, up to 64 records per page)  |
+| **DiskManager** | Reads and writes individual page files from disk       |
+| **BufferPool**  | In-memory page cache with LRU eviction (min-heap)      |
+| **WALManager**  | Write-ahead logging for crash durability               |
+| **PageManager** | Coordinates inserts, deletes, WAL recovery on startup  |
+| **QueryEngine** | Sorted index supporting get, prefix filter, range scan |
 
 ---
 
@@ -51,7 +56,7 @@ Each layer has a single responsibility and a well-defined interface:
 
 ## Project Structure
 
-\```
+```
 PersistX/
 ├── include/
 │   ├── Record.h          # Key-value record struct
@@ -71,27 +76,27 @@ PersistX/
 │   └── QueryEngine.cpp
 ├── CMakeLists.txt
 └── .gitignore
-\```
+```
 
 ---
 
 ## Building
 
-**Prerequisites:** CMake ≥ 3.16, a C++17-compatible compiler (GCC, Clang, or MSVC).
+**Prerequisites:** CMake >= 3.16, a C++17-compatible compiler (GCC, Clang, or MSVC).
 
-\```bash
+```bash
 # Configure
 cmake -S . -B build
 
 # Build
 cmake --build build
-\```
+```
 
 On Windows with MinGW:
-\```bash
+```bash
 cmake -S . -B build -G "MinGW Makefiles"
 cmake --build build
-\```
+```
 
 The compiled binary lands at `build/db_engine` (or `build/db_engine.exe` on Windows).
 
@@ -99,9 +104,9 @@ The compiled binary lands at `build/db_engine` (or `build/db_engine.exe` on Wind
 
 ## Running
 
-\```bash
+```bash
 ./build/db_engine
-\```
+```
 
 The TUI menu launches automatically. On startup, the engine checks for un-checkpointed WAL entries and replays them before accepting input.
 
@@ -109,7 +114,7 @@ The TUI menu launches automatically. On startup, the engine checks for un-checkp
 
 ## Menu Options
 
-\```
+```
 RECORDS
   1. Insert record
   2. Remove record
@@ -130,29 +135,29 @@ STORAGE
   11. Flush to disk
 
 DANGER ZONE
-  12. Crash  (simulate abrupt exit — WAL NOT flushed)
+  12. Crash  (simulate abrupt exit -- WAL NOT flushed)
   13. Exit   (safe flush + quit)
-\```
+```
 
 ---
 
 ## How WAL Recovery Works
 
-\```
+```
 Normal run:
-  INSERT key → WAL logs INSERT → Page updated → Buffer marked dirty
-  EXIT (option 13) → flushAll() → WAL CHECKPOINT written
+  INSERT key --> WAL logs INSERT --> Page updated --> Buffer marked dirty
+  EXIT (option 13) --> flushAll() --> WAL CHECKPOINT written
 
 Crash run:
-  INSERT key → WAL logs INSERT → Page updated
-  CRASH (option 12) → process exits; no checkpoint, no flush
+  INSERT key --> WAL logs INSERT --> Page updated
+  CRASH (option 12) --> process exits; no checkpoint, no flush
 
 Next startup:
   DiskManager restores pages from disk
   WALManager detects pending entries (after last CHECKPOINT)
-  PageManager replays all pending INSERTs and REMOVEs → data restored
-  New CHECKPOINT written → engine ready
-\```
+  PageManager replays all pending INSERTs and REMOVEs --> data restored
+  New CHECKPOINT written --> engine ready
+```
 
 ---
 
@@ -168,11 +173,11 @@ Next startup:
 
 ## Mentees
 
-| Name | Repository |
-|------|------------|
-| Ekansh Goel | https://github.com/ekansh1905/PersistX.git |
-| Moulik Bansal | https://github.com/moulik123098/PersistX.git |
-| Krivit Sisodiya | https://github.com/krix-s/PersistX.git |
+| Name            | Repository                                      |
+|-----------------|-------------------------------------------------|
+| Ekansh Goel     | https://github.com/ekansh1905/PersistX.git      |
+| Moulik Bansal   | https://github.com/moulik123098/PersistX.git    |
+| Krivit Sisodiya | https://github.com/krix-s/PersistX.git          |
 
 ---
 
